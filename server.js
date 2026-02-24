@@ -14,6 +14,19 @@ function makeToken() { // Funktion der genererer et unikt login-token
   return token; // Returnerer tokenet så vi kan gemme det og sende det i mail-linket
 }
 
+//til email - det her er ren chatGPT. Jeg aner ikke, hvad der er hvad.
+require("dotenv").config({ path: "mailstuff.env" });
+  const nodemailer = require("nodemailer");
+  const transporter = nodemailer.createTransport({
+    host: "smtp.gmail.com",
+    port: 465,
+    secure: true, // true fordi vi bruger port 465 (påstår chatgpt)
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS
+    }
+  });
+
 //til at finde min JSON fil med brugere
 const fs = require("fs");
 const path = require("path");
@@ -37,7 +50,7 @@ app.get("/login", (req, res) => {
   res.render("login", { error: null }); // Express finder views/login.ejs og siger første gang, at der selvfølgelig ingen fejl er
 });
 
-app.post("/login", (req, res) => {
+app.post("/login", async (req, res) => {
   const { username, password } = req.body;
   const users = readUsers();
 
@@ -57,13 +70,39 @@ app.post("/login", (req, res) => {
     return res.render("login", { error: "Forkert kodeord" }); //giver kodeord error til login.ejs
   }
 
-  return res.render("check-email", { email: user.email });
 
   const token = makeToken(); //laver token
   const verifyLink = `http://${IP}:${port}/verify?token=${token}`; //link til min lokale server med en query ?token=${token} i url'en
+  
+  await transporter.sendMail({
+    from: process.env.EMAIL_USER,
+    to: user.email,
+    subject: "Dit login-link",
+    text: `Klik på linket for at logge ind: ${verifyLink}`,
+    html: `<p>Klik på linket for at logge ind:</p><p><a href="${verifyLink}">${verifyLink}</a></p>`
+  });
+
+  return res.render("check-email", { email: user.email });
 });
 
 //error handler
+
+//email test 
+app.get("/testmail", async (req, res) => {
+  try {
+    await transporter.sendMail({
+      from: process.env.EMAIL_USER,
+      to: process.env.EMAIL_USER, // sender til dig selv
+      subject: "Test fra Node app",
+      text: "Hvis du kan læse dette, virker det."
+    });
+
+    res.send("Mail sendt!");
+  } catch (err) {
+    console.error(err);
+    res.send("Fejl ved sending");
+  }
+});
 
 //opsætning
 app.listen(port, IP, () => {
