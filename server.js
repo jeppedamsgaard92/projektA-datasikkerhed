@@ -49,7 +49,7 @@ app.post("/login", (req, res) => {
     return res.render("login", { error: "Forkert kodeord" }); //giver kodeord error til login.ejs
   }
 
-  res.send("Login OK");
+  return res.render("check-email", { email: user.email });
 });
 
 //error handler
