@@ -15,25 +15,6 @@ Kommentar: Projektbeskrivelsen kan ikke løses, da vi intet praksisnært har læ
     }
 
 
-* Plan for middleware
-
-    POST /login
-        loadUsers
-        checkCredentials
-        issueToken
-        showCheckEmail (eller sendEmail senere)
-
-    GET /verify
-        loadTokenStore
-        validateToken
-        consumeToken
-        setAuthCookie
-        redirect
-
-    GET /protected
-        requireAuth
-        renderProtected
-
 * Jeg aner ikke hvordan man sender emails fra en server.
     npm i nodemailer // tillader at jeg kan sende mails til gmail??
     npm install dotenv // tillader at jeg kan sende mails til gmail?? (ifølge chatgpt)
@@ -52,5 +33,6 @@ Kommentar: Projektbeskrivelsen kan ikke løses, da vi intet praksisnært har læ
 
 * laver .env fil til det med mail.
     den ligges i en .gitignore af åbenlyse årsager (i terminal: touch .gitignore)
+    det kunne en underviser godt lige have gjort opmærksom på. det er faktisk uacceptabelt. rent held at jeg opdagede, at jeg ville offentliggøre adgangen til min mail. 
 
 * for at teste mail: http://127.0.0.1:3000/testmail
