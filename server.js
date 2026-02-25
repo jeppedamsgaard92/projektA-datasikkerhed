@@ -45,17 +45,16 @@ console.log(readUsers());
 app.use(express.urlencoded({ extended: true }));
 
 //logger
-function logger(req, res, next) {
-  console.log(`${req.method} ${req.url}`);
-  next();
-}
-app.use(logger);
 
 //authenticator
-function authenticateCredentials(req, res, next) {
+
+app.get("/login", (req, res) => {
+  res.render("login", { error: null }); // Express finder views/login.ejs og siger første gang, at der selvfølgelig ingen fejl er
+});
+
+app.post("/login", async (req, res) => {
   const { username, password } = req.body;
   const users = readUsers();
-
   let user = null;
   for (let i = 0; i < users.length; i++) {
     if (users[i].username === username) {
@@ -63,59 +62,32 @@ function authenticateCredentials(req, res, next) {
       break; // stop når vi har fundet brugeren
     }
   }
-
   if (!user) {
     return res.render("login", { error: "Bruger findes ikke" }); //giver brugernavn error til login.ejs
   }
-
   if (user.password !== password) {
     return res.render("login", { error: "Forkert kodeord" }); //giver kodeord error til login.ejs
   }
-
-  req.user = user;
-  next();
-}
-
-function issueToken(req, res, next) {
-  const user = req.user;
-
   const token = makeToken(); //laver token
   // token udløber om 10 minutter
   const expiresAt = Date.now() + 10 * 60 * 1000;
-
   // gem token server-side så vi kan verificere det senere
   loginTokens.set(token, {
     username: user.username,
     expiresAt: expiresAt,
     used: false,
   });
-
-  req.verifyLink = `http://${IP}:${port}/verify?token=${token}`; //link til min lokale server med en query ?token=${token} i url'en
-  next();
-}
-
-async function sendMagicLink(req, res, next) {
-  const user = req.user;
-  const verifyLink = req.verifyLink;
-
-  try {
-    await transporter.sendMail({
-      from: process.env.EMAIL_USER,
-      to: user.email,
-      subject: "Dit login-link",
-      text: `Klik på linket for at logge ind: ${verifyLink}`,
-      html: `<p>Klik på linket for at logge ind:</p><p><a href="${verifyLink}">${verifyLink}</a></p>`,
-    });
-
-    next();
-  } catch (err) {
-    console.error(err);
-    res.status(500).send("Fejl ved sending");
-  }
-}
-
-//verify middleware (samlet i én)
-function verifyToken(req, res, next) {
+  const verifyLink = `http://${IP}:${port}/verify?token=${token}`; //link til min lokale server med en query ?token=${token} i url'en
+  await transporter.sendMail({
+    from: process.env.EMAIL_USER,
+    to: user.email,
+    subject: "Dit login-link",
+    text: `Klik på linket for at logge ind: ${verifyLink}`,
+    html: `<p>Klik på linket for at logge ind:</p><p><a href="${verifyLink}">${verifyLink}</a></p>`,
+  });
+  return res.render("check-email", { email: user.email });
+});
+app.get("/verify", (req, res) => {
   const token = req.query.token; // token fra URL'en
   // 1) mangler token?
   if (!token) return res.status(400).send("Mangler token");
@@ -129,56 +101,15 @@ function verifyToken(req, res, next) {
   // 5) markér token som brugt (one-time)
   entry.used = true;
   loginTokens.set(token, entry);
-
-  req.entry = entry;
-  next();
-}
+  // 6) OK
+  console.log(`Token OK. Bruger: ${entry.username}`);
+  loginTokens.delete(token);
+  return res.render("min-side");
+});
 
 //response/route
-app.get("/login", (req, res) => {
-  res.render("login", { error: null }); // Express finder views/login.ejs og siger første gang, at der selvfølgelig ingen fejl er
-});
-
-app.post("/login",
-  authenticateCredentials,
-  issueToken,
-  sendMagicLink,
-  (req, res) => {
-    return res.render("check-email", { email: req.user.email });
-  }
-);
-
-app.get("/verify",
-  verifyToken,
-  (req, res) => {
-    // 6) OK
-    console.log(`Token OK. Bruger: ${req.entry.username}`)
-    return res.render('min-side');
-  }
-);
 
 //error handler
-app.use((err, req, res, next) => {
-  console.error(err);
-  res.status(500).send("Serverfejl");
-});
-
-//email test --> for at teste mail når server kører: http://127.0.0.1:3000/testmail
-app.get("/testmail", async (req, res) => {
-  try {
-    await transporter.sendMail({
-      from: process.env.EMAIL_USER,
-      to: process.env.EMAIL_USER, // sender til dig selv
-      subject: "Test fra Node app",
-      text: "Hvis du kan læse dette, virker det.",
-    });
-
-    res.send("Mail sendt!");
-  } catch (err) {
-    console.error(err);
-    res.send("Fejl ved sending");
-  }
-});
 
 //opsætning
 app.listen(port, IP, () => {
