@@ -45,9 +45,13 @@ console.log(readUsers());
 app.use(express.urlencoded({ extended: true }));
 
 //logger
+app.use((req, res, next) => {
+  const tidspunkt = new Date().toLocaleString();
+  console.log(`log 1: [${tidspunkt}] ${req.method} ${req.url}`);
+  next();
+});
 
 //authenticator
-
 app.get("/login", (req, res) => {
   res.render("login", { error: null }); // Express finder views/login.ejs og siger første gang, at der selvfølgelig ingen fejl er
 });
@@ -89,21 +93,13 @@ app.post("/login", async (req, res) => {
 });
 app.get("/verify", (req, res) => {
   const token = req.query.token; // token fra URL'en
-  // 1) mangler token?
-  if (!token) return res.status(400).send("Mangler token");
-  // 2) findes token i mit lager?
-  const entry = loginTokens.get(token);
-  if (!entry) return res.status(400).send("Ugyldigt link (token findes ikke)");
-  // 3) er token allerede brugt?
-  if (entry.used) return res.status(400).send("Linket er allerede brugt");
-  // 4) er token udløbet?
-  if (Date.now() > entry.expiresAt) return res.status(400).send("Linket er udløbet");
-  // 5) markér token som brugt (one-time)
-  entry.used = true;
-  loginTokens.set(token, entry);
-  // 6) OK
-  console.log(`Token OK. Bruger: ${entry.username}`);
-  loginTokens.delete(token);
+  if (!token) return res.status(400).send("Mangler token");   // 1) mangler token?
+  const entry = loginTokens.get(token);   // 2) findes token i mit lager?
+  if (!entry) return res.status(400).send("Ugyldigt link (token findes ikke)"); // 2.2) findes token i mit lager?
+  if (entry.used) return res.status(400).send("Linket er allerede brugt");   // 3) er token allerede brugt?
+  if (Date.now() > entry.expiresAt) return res.status(400).send("Linket er udløbet");   // 4) er token udløbet?
+  entry.used = true;  // 5) markér token som brugt (one-time)
+  console.log(`Token OK. Bruger: ${entry.username}`);   // 6) OK
   return res.render("min-side");
 });
 
