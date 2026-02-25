@@ -100,6 +100,7 @@ app.get("/verify", (req, res) => {
   if (Date.now() > entry.expiresAt) return res.status(400).send("Linket er udløbet");   // 4) er token udløbet?
   entry.used = true;  // 5) markér token som brugt (one-time)
   console.log(`Token OK. Bruger: ${entry.username}`);   // 6) OK
+  loginTokens.delete(token); // sletter token
   return res.render("min-side");
 });
 
