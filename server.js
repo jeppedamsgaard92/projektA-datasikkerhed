@@ -45,15 +45,14 @@ console.log(readUsers());
 app.use(express.urlencoded({ extended: true }));
 
 //logger
+function logger(req, res, next) {
+  console.log(`${req.method} ${req.url}`);
+  next();
+}
+app.use(logger);
 
 //authenticator
-
-//response/route
-app.get("/login", (req, res) => {
-  res.render("login", { error: null }); // Express finder views/login.ejs og siger første gang, at der selvfølgelig ingen fejl er
-});
-
-app.post("/login", async (req, res) => {
+function authenticateCredentials(req, res, next) {
   const { username, password } = req.body;
   const users = readUsers();
 
@@ -73,6 +72,13 @@ app.post("/login", async (req, res) => {
     return res.render("login", { error: "Forkert kodeord" }); //giver kodeord error til login.ejs
   }
 
+  req.user = user;
+  next();
+}
+
+function issueToken(req, res, next) {
+  const user = req.user;
+
   const token = makeToken(); //laver token
   // token udløber om 10 minutter
   const expiresAt = Date.now() + 10 * 60 * 1000;
@@ -84,19 +90,32 @@ app.post("/login", async (req, res) => {
     used: false,
   });
 
-  const verifyLink = `http://${IP}:${port}/verify?token=${token}`; //link til min lokale server med en query ?token=${token} i url'en
+  req.verifyLink = `http://${IP}:${port}/verify?token=${token}`; //link til min lokale server med en query ?token=${token} i url'en
+  next();
+}
 
-  await transporter.sendMail({
-    from: process.env.EMAIL_USER,
-    to: user.email,
-    subject: "Dit login-link",
-    text: `Klik på linket for at logge ind: ${verifyLink}`,
-    html: `<p>Klik på linket for at logge ind:</p><p><a href="${verifyLink}">${verifyLink}</a></p>`,
-  });
+async function sendMagicLink(req, res, next) {
+  const user = req.user;
+  const verifyLink = req.verifyLink;
 
-  return res.render("check-email", { email: user.email });
-});
-app.get("/verify", (req, res) => {
+  try {
+    await transporter.sendMail({
+      from: process.env.EMAIL_USER,
+      to: user.email,
+      subject: "Dit login-link",
+      text: `Klik på linket for at logge ind: ${verifyLink}`,
+      html: `<p>Klik på linket for at logge ind:</p><p><a href="${verifyLink}">${verifyLink}</a></p>`,
+    });
+
+    next();
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Fejl ved sending");
+  }
+}
+
+//verify middleware (samlet i én)
+function verifyToken(req, res, next) {
   const token = req.query.token; // token fra URL'en
   // 1) mangler token?
   if (!token) return res.status(400).send("Mangler token");
@@ -110,11 +129,38 @@ app.get("/verify", (req, res) => {
   // 5) markér token som brugt (one-time)
   entry.used = true;
   loginTokens.set(token, entry);
-  // 6) OK
-  return res.send(`Token OK. Bruger: ${entry.username}`);
+
+  req.entry = entry;
+  next();
+}
+
+//response/route
+app.get("/login", (req, res) => {
+  res.render("login", { error: null }); // Express finder views/login.ejs og siger første gang, at der selvfølgelig ingen fejl er
 });
 
+app.post("/login",
+  authenticateCredentials,
+  issueToken,
+  sendMagicLink,
+  (req, res) => {
+    return res.render("check-email", { email: req.user.email });
+  }
+);
+
+app.get("/verify",
+  verifyToken,
+  (req, res) => {
+    // 6) OK
+    return res.send(`Token OK. Bruger: ${req.entry.username}`);
+  }
+);
+
 //error handler
+app.use((err, req, res, next) => {
+  console.error(err);
+  res.status(500).send("Serverfejl");
+});
 
 //email test
 app.get("/testmail", async (req, res) => {
