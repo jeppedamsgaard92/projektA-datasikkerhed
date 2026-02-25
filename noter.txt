@@ -1,0 +1,56 @@
+"Læringsmålene er praktisk anvendelse af færdigheder lært i de indgående fag på en praktisk, ikke kendt problemstilling. Der henvises i øvrigt til studieordningens læringsmål for de to fag."
+
+Kommentar: Projektbeskrivelsen kan ikke løses, da vi intet praksisnært har lært i datasikkerhedsfaget. Intet har vi lært ud over teoretiske begreber. Hvordan bør jeg håndtere et log in link? Token - det har vi ikke lært om. Sende e-mail - det har vi ikke lært om. Hashing af kodeord - det har vi ikke lært om.
+
+* Tænker at en token er måden at lave log in link - men jeg ved det ikke.
+    const crypto = require("crypto");     // Importerer Node's indbyggede "crypto"-modul. Det bruges til at lave kryptografisk sikre, tilfældige værdier. Det er vigtigt, fordi login-tokens ikke må kunne gættes.
+
+    function makeToken() {     // Funktion der genererer et unikt login-token
+
+        const randomBuffer = crypto.randomBytes(32); // crypto.randomBytes(32) --> genererer 32 tilfældige bytes (256 bits) --> jo flere bytes, jo sværere er det at gætte tokenet --> 32 bytes er mere end rigeligt (ifølge chatgpt) til et sikkert engangslink
+
+        const token = randomBuffer.toString("hex"); // .toString("hex") --> konverterer de rå bytes til en hex-streng --> fx: "a3f9c8e2b4..." --> hex betyder at hver byte bliver repræsenteret som 2 tegn (0-9, a-f) --> 32 bytes bliver til 64 tegn i hex
+
+        return token;     // Returnerer tokenet så vi kan gemme det og sende det i mail-linket
+    }
+
+
+* Plan for middleware
+
+    POST /login
+        loadUsers
+        checkCredentials
+        issueToken
+        showCheckEmail (eller sendEmail senere)
+
+    GET /verify
+        loadTokenStore
+        validateToken
+        consumeToken
+        setAuthCookie
+        redirect
+
+    GET /protected
+        requireAuth
+        renderProtected
+
+* Jeg aner ikke hvordan man sender emails fra en server.
+    npm i nodemailer // tillader at jeg kan sende mails til gmail??
+    npm install dotenv // tillader at jeg kan sende mails til gmail?? (ifølge chatgpt)
+
+* email setup guide af chatgpt
+    🔹 TRIN 1 – Slå 2-trinsbekræftelse til
+    Gå til:
+    👉 https://myaccount.google.com/security
+    Find "Log ind på Google"
+    Klik på "2-trinsbekræftelse"
+    Aktiver det (du skal bekræfte med SMS eller Google Authenticator)
+    ✅ Når det er slået til, kan du lave app passwords.
+    👉 https://myaccount.google.com/apppasswords 
+
+    koden google gav: hemmelig
+
+* laver .env fil til det med mail.
+    den ligges i en .gitignore af åbenlyse årsager (i terminal: touch .gitignore)
+
+* for at teste mail: http://127.0.0.1:3000/testmail

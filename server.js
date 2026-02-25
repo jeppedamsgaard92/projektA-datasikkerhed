@@ -152,7 +152,8 @@ app.get("/verify",
   verifyToken,
   (req, res) => {
     // 6) OK
-    return res.send(`Token OK. Bruger: ${req.entry.username}`);
+    console.log(`Token OK. Bruger: ${req.entry.username}`)
+    return res.render('min-side');
   }
 );
 
@@ -162,7 +163,7 @@ app.use((err, req, res, next) => {
   res.status(500).send("Serverfejl");
 });
 
-//email test
+//email test --> for at teste mail når server kører: http://127.0.0.1:3000/testmail
 app.get("/testmail", async (req, res) => {
   try {
     await transporter.sendMail({
