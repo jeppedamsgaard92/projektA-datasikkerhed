@@ -110,8 +110,8 @@ app.get("/verify", (req, res) => {
   // 5) markér token som brugt (one-time)
   entry.used = true;
   loginTokens.set(token, entry);
-  // 6) TODO: her sætter vi cookie / session (næste trin)
-  return res.send(`Token OK. Bruger: ${entry.username} (næste: sæt cookie og redirect)`);
+  // 6) OK
+  return res.send(`Token OK. Bruger: ${entry.username}`);
 });
 
 //error handler
