@@ -18,7 +18,7 @@ function makeToken() { // Funktion der genererer et unikt login-token
 const loginTokens = new Map(); // token -> { username, expiresAt, used } // set() i en Map sætter et key → value pair.
 
 //til email - det her er ren chatGPT. Jeg aner ikke, hvad der er hvad.
-require("dotenv").config({ path: "mailstuff.env" });
+require("dotenv").config();
 const nodemailer = require("nodemailer");
 const transporter = nodemailer.createTransport({
   host: "smtp.gmail.com",
