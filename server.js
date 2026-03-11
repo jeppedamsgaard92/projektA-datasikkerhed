@@ -10,7 +10,7 @@ app.set("view engine", "ejs"); //bruger EJS default opsætning som tilgår .ejs 
 const { validatePassword } = require("./utils/passwordValidator");
 const { makeToken, loginTokens } = require("./services/tokenService");
 const { sendLoginMail } = require("./services/mailService");
-const { readUsers, findUser } = require("./services/userService");
+const { readUsers, findUser, saveUser } = require("./services/userService");
 const { createUserSchema } = require("./utils/validator");
 
 console.log(readUsers());
@@ -41,21 +41,29 @@ app.post("/opretBruger", (req, res) => {
   const { email, username, password, passwordRepeat } = req.body;
   const findesEmail = findUser("email", email);
   const findesBrugernavn = findUser("username", username);
-  //const passwordStatus = validatePassword(password, passwordRepeat);
   const resultAfBrugerInput = createUserSchema.safeParse(req.body);
 
-  if (findesEmail || findesBrugernavn || !resultAfBrugerInput.success ) {
+  if (findesEmail || findesBrugernavn || !resultAfBrugerInput.success) {
     return res.render("opretBruger", {
       error: "Ret det relevante felt.",
       globalErrorBg: "red",
       emailError: findesEmail ? "e-mail findes allerede" : "",
       usernameError: findesBrugernavn ? "brugernavn findes allerede" : "",
-      passwordError: resultAfBrugerInput.error.issues[0].message,
+      passwordError: resultAfBrugerInput.success
+        ? ""
+        : resultAfBrugerInput.error.issues[0].message,
     });
   }
 
-  //tilføj email check ved at sende en email, som skal bekræftes før brugeren oprettes og kan logge ind
-  res.send("Bruger er valideret korrekt");
+  const newUser = {
+    email,
+    username,
+    password,
+  };
+
+  saveUser(newUser);
+
+  return res.send("Bruger oprettet og gemt");
 });
 
 //authenticator login

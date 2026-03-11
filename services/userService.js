@@ -25,7 +25,14 @@ function findUser(key, value) {
 }
 */
 
+function saveUser(newUser) {
+  const users = readUsers();
+  users.push(newUser);
+  fs.writeFileSync(filePath, JSON.stringify(users, null, 2), "utf8");
+}
+
 module.exports = {
   readUsers,
   findUser,
+  saveUser,
 };
