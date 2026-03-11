@@ -6,12 +6,12 @@ const IP = "127.0.0.1";
 app.use(express.static("public")); //hvis præcis url findes i public, så tilgås disse
 app.set("view engine", "ejs"); //bruger EJS default opsætning som tilgår .ejs filer i "./views" mappen
 
-//moduler 
+//moduler
 const { validatePassword } = require("./utils/passwordValidator");
 const { makeToken, loginTokens } = require("./services/tokenService");
-const { sendLoginMail } = require('./services/mailService');
-const { readUsers, findUser } = require('./services/userService');
-
+const { sendLoginMail } = require("./services/mailService");
+const { readUsers, findUser } = require("./services/userService");
+const { createUserSchema } = require("./utils/validator");
 
 console.log(readUsers());
 
@@ -35,19 +35,22 @@ app.get("/opretBruger", (req, res) => {
     passwordError: null,
   }); // Express finder views/opretBruger.ejs og siger første gang, at der selvfølgelig ingen fejl er
 });
+
+//HER LIGGER BRUGER VALIDERINGEN IGENNEM ZOD-modulet
 app.post("/opretBruger", (req, res) => {
   const { email, username, password, passwordRepeat } = req.body;
   const findesEmail = findUser("email", email);
   const findesBrugernavn = findUser("username", username);
-  const passwordStatus = validatePassword(password, passwordRepeat);
+  //const passwordStatus = validatePassword(password, passwordRepeat);
+  const resultAfBrugerInput = createUserSchema.safeParse(req.body);
 
-  if (findesEmail || findesBrugernavn || passwordStatus !== "") {
+  if (findesEmail || findesBrugernavn || !resultAfBrugerInput.success ) {
     return res.render("opretBruger", {
       error: "Ret det relevante felt.",
       globalErrorBg: "red",
       emailError: findesEmail ? "e-mail findes allerede" : "",
       usernameError: findesBrugernavn ? "brugernavn findes allerede" : "",
-      passwordError: passwordStatus,
+      passwordError: resultAfBrugerInput.error.issues[0].message,
     });
   }
 
@@ -90,9 +93,7 @@ app.post("/login", async (req, res) => {
 
   sendLoginMail(user.email, verifyLink);
   return res.render("check-email", { email: user.email });
-  
 });
-
 
 app.get("/verify", (req, res) => {
   const token = req.query.token; // token fra URL'en
