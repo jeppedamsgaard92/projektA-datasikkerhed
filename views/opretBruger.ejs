@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Opret bruger</title>
+    <link rel="stylesheet" href="opretBrugerStyle.css">
+</head>
+<body>
+    <h1>Opret bruger</h1>
+
+    <% if (error) { %>
+        <div class="error">
+            <%= error %>
+        </div>
+    <% } %>
+
+    <form action="/opretBruger" method="POST" autocomplete="on" class="opretBrugerForm">
+        <div class="loginLabel">
+            <label>
+                Skriv e-mail (bruges til log in)
+                <input
+                    type="email"
+                    name="email"
+                    autocomplete="email"
+                    required
+                    maxlength="254"
+                />
+            </label>
+            <p class="error"><%= emailError %></p>
+        </div>
+        <div class="loginLabel">
+            <label>
+                Skriv brugernavn
+                <input name="username" type="text" required/>
+            </label>
+            <p class="error"><%= usernameError %></p>
+        </div>
+        <div class="loginLabel">
+            <label>
+                <p>kodeordet skal være: mindst 8 tegn, inkludere mindst ét stort bogstav, inkludere mindst ét specialtegn: ! @ # $ % ^ & * _ - + = ? .</p>
+
+                Skriv kodeord
+                <input name="password" type="password" required/>
+            </label>
+            <label>
+                Gentag kodeord
+                <input name="passwordRepeat" type="password" required/>
+            </label>
+            <p class="error"> <%= passwordError %> </p>
+        </div>
+    
+        
+
+        <button type="submit">Opret bruger</button>
+    </form>
+</body>
+</html>

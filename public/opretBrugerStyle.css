@@ -1,0 +1,21 @@
+body{
+    /*background-color: red;*/
+}
+
+.opretBrugerForm{
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    justify-content: flex-start;
+    align-items: flex-start;
+}
+.error {
+    color: red;
+}
+
+.loginLabel {
+    background-color: lightgray;
+    padding: 5px;
+    display: flex;
+    flex-direction: column;
+}

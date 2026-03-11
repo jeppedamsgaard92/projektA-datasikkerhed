@@ -1,0 +1,34 @@
+projektA-datasikkerhed/
+│
+├── server.js
+├── utils/
+│   └── passwordValidator.js //validerer password
+├── data/
+│   └── users.json
+├── views/
+├── public/
+└── .env
+
+
+(chats forslag)
+projekt/
+│
+├── app.js
+├── server.js
+├── routes/
+│   └── authRoutes.js
+├── controllers/
+│   └── authController.js
+├── services/
+│   ├── tokenService.js
+│   ├── mailService.js
+│   └── userService.js
+├── middleware/
+│   └── logger.js
+├── utils/
+│   └── passwordValidator.js
+├── data/
+│   └── users.json
+├── views/
+├── public/
+└── .env
