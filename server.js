@@ -5,6 +5,8 @@ const port = 3000;
 const IP = "127.0.0.1";
 app.use(express.static("public")); //hvis præcis url findes i public, så tilgås disse
 app.set("view engine", "ejs"); //bruger EJS default opsætning som tilgår .ejs filer i "./views" mappen
+//opsætning: hashing og salt
+const bcrypt = require("bcrypt");
 
 //moduler
 //const { validatePassword } = require("./utils/passwordValidator");
@@ -37,7 +39,7 @@ app.get("/opretBruger", (req, res) => {
 });
 
 //HER LIGGER BRUGER VALIDERINGEN IGENNEM ZOD-modulet
-app.post("/opretBruger", (req, res) => {
+app.post("/opretBruger", async (req, res) => {
   const { email, username, password, passwordRepeat } = req.body;
   const findesEmail = findUser("email", email);
   const findesBrugernavn = findUser("username", username);
@@ -55,15 +57,18 @@ app.post("/opretBruger", (req, res) => {
     });
   }
 
-  const newUser = {
+  //HASHING OG SALTING
+  const hashedPassword = await bcrypt.hash(password, 12);
+
+  saveUser({
     email,
     username,
-    password,
-  };
+    password: hashedPassword,
+  });
 
-  saveUser(newUser);
+  //return res.send("Bruger oprettet og gemt");
+  return res.redirect("/?success=user-created");
 
-  return res.send("Bruger oprettet og gemt");
 });
 
 //authenticator login
@@ -84,9 +89,12 @@ app.post("/login", async (req, res) => {
   if (!user) {
     return res.render("login", { error: "Bruger findes ikke" }); //giver brugernavn error til login.ejs
   }
-  if (user.password !== password) {
-    return res.render("login", { error: "Forkert kodeord" }); //giver kodeord error til login.ejs
+  //HASHING OG SALTING - validerer password med bcrypt
+  const passwordMatches = await bcrypt.compare(password, user.password);
+  if (!passwordMatches) {
+    return res.render("login", { error: "Forkert kodeord" });
   }
+
   const token = makeToken(); //laver token
   // token udløber om 10 minutter
   const expiresAt = Date.now() + 10 * 60 * 1000;

@@ -8,5 +8,10 @@
     "email": "jepdam01@iba.dk",
     "username": "superman",
     "password": "Kodeord123!"
+  },
+  {
+    "email": "test@hotmail.com",
+    "username": "test1",
+    "password": "$2b$12$2vrmH.WnFrN4O86Us5BEEeorsd9SsMEW2Sh.obUNQ3mPa/u5Wgwvq"
   }
 ]
