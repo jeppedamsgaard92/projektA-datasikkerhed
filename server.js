@@ -7,11 +7,11 @@ app.use(express.static("public")); //hvis præcis url findes i public, så tilg�
 app.set("view engine", "ejs"); //bruger EJS default opsætning som tilgår .ejs filer i "./views" mappen
 
 //moduler
-const { validatePassword } = require("./utils/passwordValidator");
+//const { validatePassword } = require("./utils/passwordValidator");
 const { makeToken, loginTokens } = require("./services/tokenService");
 const { sendLoginMail } = require("./services/mailService");
 const { readUsers, findUser, saveUser } = require("./services/userService");
-const { createUserSchema } = require("./utils/validator");
+const createUserSchema = require("./utils/validator");
 
 console.log(readUsers());
 

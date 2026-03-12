@@ -2,9 +2,10 @@
 // bør opdateres til at køre asynkront og lede på en database
 const fs = require("fs");
 const path = require("path");
+const filePath = path.join(__dirname, "..", "data", "users.json");
+
 
 function readUsers() {
-  const filePath = path.join(__dirname, "..", "data", "users.json");
   const data = fs.readFileSync(filePath, "utf8");
   return JSON.parse(data);
 }
@@ -28,7 +29,7 @@ function findUser(key, value) {
 function saveUser(newUser) {
   const users = readUsers();
   users.push(newUser);
-  fs.writeFileSync(filePath, JSON.stringify(users, null, 2), "utf8");
+  fs.writeFileSync(filePath, JSON.stringify(users, null, 2), "utf8"); //null og 2 er bare for at gøre json pæn
 }
 
 module.exports = {
