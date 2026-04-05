@@ -20,30 +20,28 @@ const createUserSchema = z.object({
 
   // Brugernavn felt
   username: z
-    .string()
-    .trim() // fjerner whitespace
-    .min(3, { message: "Brugernavn skal være mindst 3 tegn" })
-    .max(30, { message: "Brugernavn må max være 30 tegn" })
-    .regex(/^[a-zA-Z0-9_]+$/, { message: "Brugernavn kan kun indeholde bogstaver, tal og underscore" })
-    .transform((val) => val.replace(/[<>]/g, "")), // fjerner farlige tegn
+    .string() // skal være tekst
+    .min(3, "Brugernavn for kort"), 
+    // minimum 3 tegn. Hvis kortere → fejlbesked
 
 
   // Password felt
   password: z
-    .string()
-    .trim()
-    .min(8, { message: "Kodeord skal være mindst 8 tegn" })
-    .max(128, { message: "Kodeord må max være 128 tegn" })
+    .string() // password skal være en string
+    .min(8, "Kodeord mindst 8 tegn") 
+    // mindst 8 tegn
+
     .regex(/[A-ZÆØÅ]/, "Mindst ét stort bogstav") 
     // regex validering: password skal indeholde mindst ét stort bogstav
     // inkluderer også danske bogstaver Æ Ø Å
+
     .regex(/[!@#$%^&*_+\-=?\.]/, "Mindst ét specialtegn"),
     // regex validering: password skal indeholde mindst ét specialtegn
     // listen i [] bestemmer hvilke tegn der accepteres
 
 
   // Gentag password
-  passwordRepeat: z.string().trim()
+  passwordRepeat: z.string()
   // skal også være en string
   // der er endnu ingen regler her — vi sammenligner den senere
 
