@@ -6,6 +6,12 @@
     <title>min side</title>
 </head>
 <body>
+    <% if (success.length > 0) { %> <!--hvis man er redirected fra login med success fra flash-->
+      <p style="color: green;"><%= success[0] %></p>
+    <% } %>
+
     <h1>Velkommen til din side</h1>
+    <a href="/">Gå til forsiden</a>
+
 </body>
 </html>

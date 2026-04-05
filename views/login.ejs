@@ -8,6 +8,10 @@
   <body>
     <h1>Log ind</h1>
 
+    <% if (success.length > 0) { %> <!--hvis man er redirected fra opretBruger med success fra flash-->
+      <p style="color: green;"><%= success[0] %></p>
+    <% } %>
+
     <% if (error) { %>
       <div class="error"><%= error %></div>
     <% } %>

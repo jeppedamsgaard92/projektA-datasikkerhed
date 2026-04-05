@@ -5,8 +5,11 @@ const port = 3000;
 const IP = "127.0.0.1";
 app.use(express.static("public")); //hvis præcis url findes i public, så tilgås disse
 app.set("view engine", "ejs"); //bruger EJS default opsætning som tilgår .ejs filer i "./views" mappen
-//opsætning: hashing og salt
+//opsætning: hashing og salt med bcrypt
 const bcrypt = require("bcrypt");
+//opsætning: session id og flash beskeder
+const createSessionMiddleware = require("./config/session");
+const flash = require("connect-flash");
 
 //moduler
 //const { validatePassword } = require("./utils/passwordValidator");
@@ -15,7 +18,37 @@ const { sendLoginMail } = require("./services/mailService");
 const { readUsers, findUser, saveUser } = require("./services/userService");
 const createUserSchema = require("./utils/validator");
 
+//authoriser 
+const requireAuth = require("./middleware/requireAuth");
+
 console.log(readUsers());
+
+//begrænser JSON payload størrelse
+app.use(express.json({limit: "10kb"}));
+//loginLimiter
+const rateLimit = require("express-rate-limit");
+const loginLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 min
+    max: 5,                   // max 5 forsøg
+    message: "For mange loginforsøg for denne bruger. Prøv igen senere.",
+    standardHeaders: true,
+    legacyHeaders: false
+});
+
+//til session og flash
+app.use(createSessionMiddleware());
+app.use(flash());
+
+app.use((req, res, next) => {
+  res.locals.success = req.flash("success");
+  res.locals.error = req.flash("error");
+  res.locals.currentUser = req.session.user || null; //den sætter locals.currentUser til session.user i browseren/clienten, hvis den findes. ellers er den bare null.
+  next();
+});
+/*
+res.locals er et objekt til data, der automatisk bliver tilgængeligt i views (fx .ejs filer) under den aktuelle request.
+“variabler som views kan læse uden at man manuelt sender dem med res.render() hver gang”.
+*/
 
 //parser
 app.use(express.urlencoded({ extended: true }));
@@ -66,9 +99,10 @@ app.post("/opretBruger", async (req, res) => {
     password: hashedPassword,
   });
 
-  //return res.send("Bruger oprettet og gemt");
-  return res.redirect("/?success=user-created");
-
+  //return res.send("Bruger oprettet og gemt"); //første iteration af koden. den her sender bare en besked - men det er uhensigtsmæssigt ift UX
+  //return res.redirect("/?success=user-created"); //anden iteration af koden. redirecter til index.html med query parameter. Det er ok men hvis man refresher siden, så får man meddelelsen igen - og det giver ikke mening, så jeg bruger flash i stedet.
+  req.flash("success", "Bruger oprettet"); //giver mit flash object (som alle mine .ejs filer kan se) en success med en meddelelse.
+  return res.redirect("/login");
 });
 
 //authenticator login
@@ -76,7 +110,7 @@ app.get("/login", (req, res) => {
   res.render("login", { error: null }); // Express finder views/login.ejs og siger første gang, at der selvfølgelig ingen fejl er
 });
 
-app.post("/login", async (req, res) => {
+app.post("/login", loginLimiter, async (req, res) => {
   const { username, password } = req.body;
   const users = readUsers();
   let user = null;
@@ -113,19 +147,52 @@ app.post("/login", async (req, res) => {
 
 app.get("/verify", (req, res) => {
   const token = req.query.token; // token fra URL'en
+  
   if (!token) return res.status(400).send("Mangler token"); // 1) mangler token?
+  
   const entry = loginTokens.get(token); // 2) findes token i mit lager?
   if (!entry) return res.status(400).send("Ugyldigt link (token findes ikke)"); // 2.2) findes token i mit lager?
+  
   if (entry.used) return res.status(400).send("Linket er allerede brugt"); // 3) er token allerede brugt?
+  
   if (Date.now() > entry.expiresAt)
     return res.status(400).send("Linket er udløbet"); // 4) er token udløbet?
+  
   entry.used = true; // 5) markér token som brugt (one-time)
   console.log(`Token OK. Bruger: ${entry.username}`); // 6) OK
+  
+  
+  req.session.user = { //sætter session
+    username: entry.username,
+  };
+
   loginTokens.delete(token); // sletter token
-  return res.render("min-side");
+
+  //return res.render("min-side"); // første iteration
+  req.flash("success", "Du er nu logget ind");
+  return res.redirect("/min-side"); //????hvad er egentlig forskellen på redirect og render?
 });
 
 //response/route
+app.get("/", (req, res) => {
+  res.render("index");
+});
+
+app.get("/min-side", requireAuth, (req, res) => {
+  res.render("min-side");
+});
+
+app.post("/logout", (req, res) => {
+  req.session.destroy((err) => {
+    if (err) {
+      req.flash("error", "Kunne ikke logge ud");
+      return res.redirect("/min-side");
+    }
+
+    res.clearCookie("connect.sid");
+    return res.redirect("/login");
+  });
+});
 
 //error handler
 

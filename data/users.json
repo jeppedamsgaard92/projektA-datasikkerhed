@@ -1,17 +1,12 @@
 [
   {
+    "email": "jeppdamsgaard92@gmail.com",
     "username": "batman",
-    "password": "123",
-    "email": "jeppedamsgaard92@gmail.com"
+    "password": "$2b$12$ffVqLHyqC2eJ/R3QhBSrE.7MFWJauYULqYGSV6a9ZUPg44UQi8Gum"
   },
   {
-    "email": "jepdam01@iba.dk",
+    "email": "jeppedamsgaard92@gmail.com",
     "username": "superman",
-    "password": "Kodeord123!"
-  },
-  {
-    "email": "test@hotmail.com",
-    "username": "test1",
-    "password": "$2b$12$2vrmH.WnFrN4O86Us5BEEeorsd9SsMEW2Sh.obUNQ3mPa/u5Wgwvq"
+    "password": "$2b$12$3x7MevZebKl3PPORzkce9ea3z42i22b1OEj9qOmn7rupnBWrmZ.dC"
   }
 ]

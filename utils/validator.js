@@ -15,7 +15,7 @@ const createUserSchema = z.object({
   // Email felt
   email: z
     .string() // værdien skal være en string
-    .email("Ugyldig email"), // skal være en gyldig email (ellers returneres denne fejlbesked)
+    .email({message: "Ugyldig email"}), // skal være en gyldig email (ellers returneres denne fejlbesked)
 
 
   // Brugernavn felt

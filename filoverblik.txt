@@ -5,6 +5,8 @@ projektA-datasikkerhed/
 │   └── passwordValidator.js //validerer password
 ├── data/
 │   └── users.json
+├── config/
+│   └── session.js //session cookie
 ├── views/
 ├── public/
 └── .env

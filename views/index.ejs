@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="/js/script.js"></script> <!--pgs public kan man nøjes med at skrive det her-->
+</head>
+<body>
+    <% if (currentUser) { %>
+    <p>Hej <%= currentUser.username %></p>
+
+    <a href="/min-side">
+        <button>Gå til min side</button>
+    </a>
+
+    <form action="/logout" method="POST"> <!--Logout skal være: <form method="POST">, ikke <a>. Grunden: logout ændrer state → bør være POST, det er standard practice-->
+        <button type="submit">Log ud</button>
+    </form>
+
+    <% } else { %>
+
+    <a href="/login">
+        <button>Login</button>
+    </a>
+
+    <a href="/opretBruger">
+        <button>Opret bruger</button>
+    </a>
+
+    <% } %>
+</body>
+</html>
